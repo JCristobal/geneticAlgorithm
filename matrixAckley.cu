@@ -16,7 +16,7 @@
  *
  */
 template <int BLOCK_SIZE> __global__ void
-matrixAckelyCUDA(float *C, float *A, int wA, float valorA, float valorB, float valorC)
+matrixAckleyCUDA(float *C, float *A, int wA, float valorA, float valorB, float valorC)
 {
     // Block index
     int bx = blockIdx.x;
@@ -38,8 +38,11 @@ matrixAckelyCUDA(float *C, float *A, int wA, float valorA, float valorB, float v
 
     // Csub is used to store the element of the block sub-matrix
     // that is computed by the thread
-    float Csub = 0;
+    float Csub1 = 0;
+    float Csub2 = 0;
 
+    float term1 = 0;
+    float term2 = 0;
 
     // Loop over all the sub-matrices of A and B
     // required to compute the block sub-matrix
@@ -73,8 +76,8 @@ matrixAckelyCUDA(float *C, float *A, int wA, float valorA, float valorB, float v
         for (int k = 0; k < BLOCK_SIZE; ++k)
         {
             //Csub += As[ty][k] * Bs[k][tx];
-            Csub += As[ty][k];
-
+            Csub1 += As[ty][k]*As[ty][k];
+            Csub2 += cos(valorC*As[ty][k]);
         }
 
         // Synchronize to make sure that the preceding
@@ -88,8 +91,11 @@ matrixAckelyCUDA(float *C, float *A, int wA, float valorA, float valorB, float v
     //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     //C[c + wB * ty + tx] = Csub;
     int c = wA * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    float aux = valorA + valorB + valorC;
-    C[c + wA * ty + tx] = Csub ;//+ aux;
+
+    term1= (0-valorA)*exp( (0-valorB)*sqrt(Csub1/wA) );
+    term2= 0-exp(Csub2/wA);
+
+    C[c + wA * ty + tx] = term1 + term2 + valorA + exp(1.0);
 
 }
 
@@ -166,17 +172,17 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
     dim3 threads(block_size, block_size);
     dim3 grid(dimsA.x / threads.x, dimsA.y / threads.y);
 
-
-    // Performs warmup operation using matrixSum CUDA kernel
+/*
+    //  CUDA kernel
     if (block_size == 16)
     {
-        matrixAckelyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+        matrixAckleyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
     }
     else
     {
-        matrixAckelyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+        matrixAckleyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
     }
-
+*/
 
     cudaDeviceSynchronize();
 
@@ -211,11 +217,11 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
     // Execute the kernel
 	if (block_size == 16)
 	{
-		matrixAckelyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+		matrixAckleyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
 	}
 	else
 	{
-		matrixAckelyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+		matrixAckleyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
 	}
 
 
@@ -253,7 +259,7 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
     printf(
         " \"datos_computo\" : { \n   \"performance\" : \"%.2f GFlop/s\", \n   \"time\" : \"%.3f msec\", \n   \"size\" : \"%.0f Ops\", \n   \"workgroupSize\" : \"%u threads/block\" \n }, \n",
         gigaFlops,
-        msecPermatrixSum,
+        msecTotal,
         flopsPermatrixSum,
         threads.x * threads.y);
 
