@@ -23,12 +23,19 @@
 
 using namespace std;
 
-//  Static arameters
-# define POPSIZE 50
-# define MAXGENS 100
-# define NVARS 3
-# define PXOVER 0.8
-# define PMUTATION 0.15
+// Parameters
+int POPSIZE = 50;
+int MAXGENS = 100;
+int NVARS = 10;
+float MIN = -32.768;
+float MAX = 32.768;
+float PXOVER = 0.8;
+float PMUTATION = 0.15;
+
+//  Static parameters
+const int MAXVARS = 10000;
+const int MAXPOPSIZE = 1000;
+
 //
 //  Each GENOTYPE is a member of the population, with
 //  gene: a string of variables,
@@ -40,16 +47,16 @@ using namespace std;
 //
 struct genotype
 {
-  double gene[NVARS];
+  double gene[MAXVARS];
   double fitness;
-  double upper[NVARS];
-  double lower[NVARS];
+  double upper[MAXVARS];
+  double lower[MAXVARS];
   double rfitness;
   double cfitness;
 };
 
-struct genotype population[POPSIZE+1];
-struct genotype newpopulation[POPSIZE+1];
+struct genotype population[MAXPOPSIZE];
+struct genotype newpopulation[MAXPOPSIZE];
 
 void crossover ( int &seed );
 void elitist ( );
@@ -64,11 +71,11 @@ void selector ( int &seed );
 void Xover ( int one, int two, int &seed );
 
 
-//****************************************************************************80
+//****************************************************************************
 
 void crossover ( int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -111,11 +118,11 @@ void crossover ( int &seed )
   }
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void elitist ( )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -207,11 +214,11 @@ void elitist ( )
 
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void evaluate ( )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -224,6 +231,7 @@ void evaluate ( )
 //
 //
 {
+
   int member;
   int i;
   double x[NVARS+1];
@@ -238,11 +246,11 @@ void evaluate ( )
   }
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 int i4_uniform_ab ( int a, int b, int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -320,11 +328,11 @@ int i4_uniform_ab ( int a, int b, int &seed )
 
   return value;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void initialize ( int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -352,28 +360,14 @@ void initialize ( int &seed )
 {
   int i;
   int j;
-  double lbound; // mínimo
-  double ubound; // máximo
-
-  // Restricciones
-  double matriz_entrada[2][NVARS];
-  matriz_entrada[0][0]=0.0;
-  matriz_entrada[1][0]=5.0;
-
-  matriz_entrada[0][1]=0.0;
-  matriz_entrada[1][1]=5.0;
-
-  matriz_entrada[0][2]=-2.0;
-  matriz_entrada[1][2]=2.0;
+  double lbound = MIN;
+  double ubound = MAX;
 
 //
 //  Initialize variables within the bounds
 //
   for ( i = 0; i < NVARS; i++ )
   {
-
-    lbound=matriz_entrada[0][i];
-    ubound=matriz_entrada[1][i];
 
     for ( j = 0; j < POPSIZE; j++ )
     {
@@ -383,16 +377,16 @@ void initialize ( int &seed )
       population[j].lower[i] = lbound;
       population[j].upper[i]= ubound;
       population[j].gene[i] = r8_uniform_ab ( lbound, ubound, seed );
+      //printf("(%d)%f",j,population[j].gene[i]);
     }
   }
-
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void keep_the_best ( )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -432,11 +426,11 @@ void keep_the_best ( )
 
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void mutate ( int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -476,11 +470,11 @@ void mutate ( int &seed )
 
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 double r8_uniform_ab ( double a, double b, int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -528,11 +522,11 @@ double r8_uniform_ab ( double a, double b, int &seed )
 
   return value;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void report ( int generation )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -591,11 +585,11 @@ void report ( int generation )
 
   return;
 }
-//****************************************************************************80
+//****************************************************************************
 
 void selector ( int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -675,11 +669,11 @@ void selector ( int &seed )
   return;
 }
 
-//****************************************************************************80
+//****************************************************************************
 
 void Xover ( int one, int two, int &seed )
 
-//****************************************************************************80
+//****************************************************************************
 //
 //  Purpose:
 //
@@ -719,12 +713,31 @@ void Xover ( int one, int two, int &seed )
 
 
 /**
- * Función Ackley
+ * Función Ackley usando CUDA
+ * (pendiente de desarrollo, funcionalidad básica de sumatoria de elementos)
  *
  */
-template <int BLOCK_SIZE> __global__ void
-matrixAckleyCUDA(float *C, float *A, int wA, float valorA, float valorB, float valorC)
+
+__global__ void
+matrixAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB, float valorC)
 {
+
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    float tmpSum = 0;
+    // Funcionalidad simplicada a sumatoria, pendiente de desarrollar Ackley
+    if (ROW < wA && COL < hA) {
+        // each thread computes one element of the block sub-matrix
+        for (int i = 0; i < wA; i++) {
+            tmpSum += A[ROW * wA + i];// * B[i * dimsA.y + COL];
+        }
+    }
+    C[ROW * wA + COL] = tmpSum;
+
+/*
+	const int BLOCK_SIZE=32;
+
     // Block index
     int bx = blockIdx.x;
     int by = blockIdx.y;
@@ -783,7 +796,7 @@ matrixAckleyCUDA(float *C, float *A, int wA, float valorA, float valorB, float v
         for (int k = 0; k < BLOCK_SIZE; ++k)
         {
             //Csub += As[ty][k] * Bs[k][tx];
-        	Csub1 += As[ty][k]*As[ty][k];
+        	Csub1 += As[ty][k] * As[ty][k];
             Csub2 += cos(valorC*As[ty][k]);
         }
 
@@ -802,10 +815,14 @@ matrixAckleyCUDA(float *C, float *A, int wA, float valorA, float valorB, float v
     term1= (0-valorA)*exp( (0-valorB)*sqrt(Csub1/wA) );
     term2= 0-exp(Csub2/wA);
 
-    C[c + wA * ty + tx] = term1 + term2 + valorA + exp(1.0);
-
+    C[c + wA * ty + tx] =  term1 + term2 + valorA + exp(1.0);
+*/
 }
 
+
+//****************************************************************************
+// Función constantInit
+//****************************************************************************
 void constantInit(float *data, int size, float val)
 {
     for (int i = 0; i < size; ++i)
@@ -813,32 +830,111 @@ void constantInit(float *data, int size, float val)
         data[i] = val;
     }
 }
+//****************************************************************************
+// Función init
+// 	Después de usar la función initialize()  para asignar valores a la población
+// 	con las restricciones necesrias, copiamos esos valores en la matriz que usará el problema
+//****************************************************************************
+void init(float *data){
+
+    int member;
+    int i,j=0;
+    double x[POPSIZE * NVARS];
+    //printf("\n");
+    for ( i = 0; i < NVARS; i++ ){
+    	for ( member = 0; member < POPSIZE; member++ ){
+			x[i] = population[member].gene[i];
+			//printf("   %f",x[i]);
+			data[j] = x[i];
+			j++;
+      }
+    }
+
+}
+
+//****************************************************************************
+// Función resultToHost
+// 	Después de evaluar la matriz correspondiente, almacenamos los resultados
+//****************************************************************************
+void resultToHost(float *data, int size){
+
+    int member;
+    int i,j=0;
+    //printf("\n");
+    for ( i = 0; i < NVARS; i++ ){
+    	for ( member = 0; member < POPSIZE; member++ ){
+    		population[member].fitness = data[j];
+			j++;
+			//printf("   %f",population[member].fitness);
+      }
+    }
+}
+
 
 /**
- * Run a simple test of matrix multiplication using CUDA
+ * Run using CUDA
  */
-int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor, float valorA, float valorB, float valorC)
+int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
 {
+
+	//  Discussion:
+	//    Each generation involves selecting the best
+	//    members, performing crossover & mutation and then
+	//    evaluating the resulting population, until the terminating
+	//    condition is satisfied
+	//
+	//    This is a simple genetic algorithm implementation where the
+	//    evaluation function takes positive values only and the
+	//    fitness of an individual is the same as the value of the
+	//    objective function.
+	//
+	//  Parameters:
+	//    MAXGENS is the maximum number of generations.
+	//    NVARS is the number of problem variables.
+	//    PMUTATION is the probability of mutation.
+	//    POPSIZE is the population size.
+	//    PXOVER is the probability of crossover.
+
+	POPSIZE = population_size;
+	MAXGENS = max_gen;
+	NVARS = n_vars;
+	MIN = min;
+	MAX = max;
+	PXOVER = p_crossover;
+	PMUTATION = p_mutation;
+
+
+
     // Allocate host memory for matrices A
     unsigned int size_A = dimsA.x * dimsA.y;
     unsigned int mem_size_A = sizeof(float) * size_A;
     float *h_A = (float *)malloc(mem_size_A);
 
     // Initialize host memory
-    //constantInit(h_A, size_A, 1.0f);
-    constantInit(h_A, size_A, valor);
+    //constantInit(h_A, size_A, valor);
+
+	int generation;
+	int i;
+	int seed;
+
+	cout << "\n";
+	if ( NVARS < 2 ){
+	  cout << "\n";
+	  cout << "  The crossover modification will not be available,\n";
+	  cout << "  since it requires 2 <= NVARS.\n";
+	}
+
+	seed = 123456789;
+	initialize ( seed );
+
+	init(h_A);
 
     // Allocate device memory
     float *d_A,  *d_C;
 
-/*
-	unsigned int mem_size_C = dimsA.y  * sizeof(float);
-	// Allocate host vector C
-    float *h_C = (float *)malloc(mem_size_C);
-*/
+
     // Allocate host matrix C
-    dim3 dimsC(dimsA.x, dimsA.y, 1);
-    unsigned int mem_size_C = dimsC.x * dimsC.x * sizeof(float);
+    unsigned int mem_size_C = dimsA.x * dimsA.y * sizeof(float);
     float *h_C = (float *) malloc(mem_size_C);
 
     if (h_C == NULL)
@@ -876,20 +972,9 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
 
 
     // Setup execution parameters
-    dim3 threads(block_size, block_size);
-    dim3 grid(dimsA.x / threads.x, dimsA.y / threads.y);
+    dim3 threads(dimsA.x, dimsA.y);
+    dim3 grid(1, 1);
 
-/*
-    //  CUDA kernel
-    if (block_size == 16)
-    {
-        matrixAckleyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
-    }
-    else
-    {
-        matrixAckleyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
-    }
-*/
 
     cudaDeviceSynchronize();
 
@@ -921,15 +1006,47 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
         exit(EXIT_FAILURE);
     }
 
-    // Execute the kernel
-	if (block_size == 16)
+
+	//  Start simple GA
+
+    matrixAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+    cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+    resultToHost(h_C, dimsA.x * dimsA.y);
+	//evaluate ( );
+
+    keep_the_best ( );
+
+
+	for ( generation = 0; generation < MAXGENS; generation++ )
 	{
-		matrixAckleyCUDA<16><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+	  selector ( seed );
+	  crossover ( seed );
+	  mutate ( seed );
+	  //report ( generation );
+
+	  matrixAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+	  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+	  resultToHost(h_C, dimsA.x * dimsA.y);
+	  //evaluate ( );
+
+	  elitist ( );
 	}
-	else
+
+	cout << " \"salida_en_bruto\" : \" \n";
+
+	cout << " Best member after " << MAXGENS << " generations:\n";
+	cout << "\n";
+
+	for ( i = 0; i < NVARS; i++ )
 	{
-		matrixAckleyCUDA<32><<< grid, threads >>>(d_C, d_A, dimsA.x, valorA, valorB, valorC);
+     cout << "  var(" << i << ") = " << population[POPSIZE].gene[i] << "\n";
 	}
+
+	cout << "  Best fitness = " << population[POPSIZE].fitness << "\n";
+	cout << "\n";
+
+	//  Terminate simple GA
+	cout << "  \", \n";
 
 
     // Record the stop event
@@ -979,15 +1096,17 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
         exit(EXIT_FAILURE);
     }
     printf(" \"num_resultados\" : \"%u\", \n",dimsA.y);
+printf("solo de la ULTIMA generacion \n");
     printf(" \"resultados\" : { \n");
 
 
-    for (int i = 0; i < (int)(dimsC.x * dimsC.y); i++)
+    for (int i = 0; i < (int)(dimsA.x * dimsA.y); i++)
     {
 
-    	if(i%dimsC.x==0){
-    		printf("   \"calculo fila %d\" : \"%.8f\", \n", i/dimsC.x, h_C[i]);
-    	}
+    	/*if(i%dimsA.y==0){
+    		printf("   \"fitness population %d\" : \"%.8f\", \n", i/dimsA.y, h_C[i]);
+    	}*/
+    	printf("   \"fitness population %d\" : \"%.8f\", \n", i, h_C[i]);
 
     }
 
@@ -1017,71 +1136,6 @@ int matrixAckley(int argc, char **argv, int block_size, dim3 &dimsA, float valor
  */
 int main(int argc, char **argv)
 {
-	//  Start simple GA
-
-	//  Discussion:
-	//    Each generation involves selecting the best
-	//    members, performing crossover & mutation and then
-	//    evaluating the resulting population, until the terminating
-	//    condition is satisfied
-	//
-	//    This is a simple genetic algorithm implementation where the
-	//    evaluation function takes positive values only and the
-	//    fitness of an individual is the same as the value of the
-	//    objective function.
-	//
-	//  Parameters:
-	//    MAXGENS is the maximum number of generations.
-	//    NVARS is the number of problem variables.
-	//    PMUTATION is the probability of mutation.
-	//    POPSIZE is the population size.
-	//    PXOVER is the probability of crossover.
-
-	int generation;
-	int i;
-	int seed;
-
-	cout << "\n";
-
-	if ( NVARS < 2 )
-	{
-	  cout << "\n";
-	  cout << "  The crossover modification will not be available,\n";
-	  cout << "  since it requires 2 <= NVARS.\n";
-	}
-
-	seed = 123456789;
-
-	initialize ( seed );
-
-	evaluate ( );
-
-    keep_the_best ( );
-
-	for ( generation = 0; generation < MAXGENS; generation++ )
-	{
-	  selector ( seed );
-	  crossover ( seed );
-	  mutate ( seed );
-	  report ( generation );
-	  evaluate ( );
-	  elitist ( );
-	}
-
-	cout << "\n";
-	cout << " Best member after " << MAXGENS << " generations:\n";
-	cout << "\n";
-
-	for ( i = 0; i < NVARS; i++ )
-	{
-     cout << "  var(" << i << ") = " << population[POPSIZE].gene[i] << "\n";
-	}
-
-	cout << "\n";
-	cout << "  Best fitness = " << population[POPSIZE].fitness << "\n";
-	//
-	//  Terminate simple GA
-
 
     if (checkCmdLineFlag(argc, (const char **)argv, "help") ||
         checkCmdLineFlag(argc, (const char **)argv, "?"))
@@ -1091,13 +1145,21 @@ int main(int argc, char **argv)
         printf("      -cvalue=contant value (constant value to initialize the matrix)\n");
         printf("      -a= (20 by default) -b= (0.2 by default) -c= (2*PI by default) \n");
 
+        printf("      -max_gen= maximum number of generations (100 by default)\n");
+        printf("      -min= minimum invidual value ( -32.768 by default)\n");
+        printf("      -max= maximum invidual value ( 32.768 by default)\n");
+        printf("      -p_mutation= probability of mutation (0.15 by default)\n");
+        printf("      -population_size= population size (50 by default)\n");
+        printf("      -p_crossover= probability of crossover (0.8 by default)\n");
+        printf("      -n_vars= number of problem variables  (10 by default)\n");
+
 
         exit(EXIT_SUCCESS);
     }
 
 	// Salida del programa en formato JSON
 	printf("{ \"calculo\":{ \n");
-    printf(" \"nombre\" : \"Ackley function in matrix using CUDA\", \n");
+    printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
 
     // valor de las filas de la matriz (1 por defecto)
     float valor=1.0;
@@ -1141,11 +1203,8 @@ int main(int argc, char **argv)
         printf(" \"dispositivo\" : \"GPU Device %d: '%s' with compute capability %d.%d\", \n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
     }
 
-    // Use a larger block size for Fermi and above
-    int block_size = (deviceProp.major < 2) ? 16 : 32;
 
-    dim3 dimsA(block_size, block_size, 1);
-
+    dim3 dimsA(POPSIZE, NVARS, 1);
 
     // width of Matrix
     if (checkCmdLineFlag(argc, (const char **)argv, "width"))
@@ -1178,10 +1237,57 @@ int main(int argc, char **argv)
     }
 
 
-    printf(" \"info_matriz\" : \"Matrix(%d,%d) with constant value %f\", \n", dimsA.x, dimsA.y, valor);
-    printf(" \"info_input\" : { \n   \"matriz\" : \" * \", \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\" \n }, \n", valorA, valorB, valorC);
+    // Variables para el Algoritmo genético
 
-    int matrix_result = matrixAckley(argc, argv, block_size, dimsA, valor, valorA, valorB, valorC);
+    int max_gen=100;
+    if (checkCmdLineFlag(argc, (const char **)argv, "max_gen"))
+    {
+    	max_gen = getCmdLineArgumentInt(argc, (const char **)argv, "max_gen");
+    }
+
+    float min=-32.768;
+    if (checkCmdLineFlag(argc, (const char **)argv, "min"))
+    {
+    	min = getCmdLineArgumentInt(argc, (const char **)argv, "min");
+    }
+
+    float max=32.768;
+    if (checkCmdLineFlag(argc, (const char **)argv, "max"))
+    {
+    	max = getCmdLineArgumentInt(argc, (const char **)argv, "max");
+    }
+
+    //    NVARS is the number of problem variables.
+    int n_vars=10;
+    if (checkCmdLineFlag(argc, (const char **)argv, "n_vars"))
+    {
+    	dimsA.y = n_vars = getCmdLineArgumentInt(argc, (const char **)argv, "n_vars");
+    }
+
+    float p_mutation=0.15;
+    if (checkCmdLineFlag(argc, (const char **)argv, "p_mutation"))
+    {
+    	p_mutation = getCmdLineArgumentInt(argc, (const char **)argv, "p_mutation");
+    }
+
+    int population_size=50;
+    if (checkCmdLineFlag(argc, (const char **)argv, "population_size"))
+    {
+    	dimsA.x = population_size = getCmdLineArgumentInt(argc, (const char **)argv, "population_size");
+    }
+
+    float p_crossover=0.8;
+    if (checkCmdLineFlag(argc, (const char **)argv, "p_crossover"))
+    {
+    	p_crossover = getCmdLineArgumentInt(argc, (const char **)argv, "p_crossover");
+    }
+
+
+    printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
+    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"number or generations\" : \"%d\",\n   \"minimal value\" : \"%f\",\n   \"maximum value\" : \"%f\",\n   \"p mutation\" : \"%f\",\n   \"p crossover\" : \"%f\",\n   \"population size\" : \"%d\",\n   \"n vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+
+
+    int matrix_result = matrixAckley(argc, argv, dimsA, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
 
     printf("\n} \n}");
 
