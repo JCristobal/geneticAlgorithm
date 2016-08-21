@@ -1,7 +1,6 @@
 # matrizAckley
-Función Ackley a varios vectores, de forma paralela usando **CUDA 7.5**
 
-Sumatoria de un vector dentro de una matriz, de forma paralela, usanda **CUDA 7.5**
+Algoritmo genético, optimizado con la unción Ackley, de forma paralela usando **CUDA 7.5**
 
 Ejcutable [*matrixAckley*](https://github.com/JCristobal/matrizAckley/blob/master/matrixAckley) con parámetros: 
 
@@ -13,6 +12,15 @@ Ejcutable [*matrixAckley*](https://github.com/JCristobal/matrizAckley/blob/maste
 * -a= valor para el parámetro *a* propio de la función Ackley (20 por defecto) 
 * -b= valor para el parámetro *b* propio de la función Ackley (0.2 por defecto) 
 * -c= valor para el parámetro *c* propio de la función Ackley (2*PI por defecto)
+
+* -max_gen= número de generaciones (100 por defecto)
+* -min= valor mínimo individual ( -32.768 por defecto)
+* -max= valor máximo individual ( 32.768 por defecto)
+* -p_mutation= probabilidad de mutación (0.15 por defecto)
+* -population_size= tamaño de la población (50 por defecto)
+* -p_crossover= probabilidad de cruce (crossover) (0.8 por defecto)
+* -n_vars= número de variables de cada población  (10 por defecto)
+
 
 La salida se dará en formato JSON, dando información del cómputo, junto a los resultados según los parámetros dados.
 

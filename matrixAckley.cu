@@ -926,14 +926,20 @@ int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, flo
 
 	seed = 123456789;
 	initialize ( seed );
-
+	// initialize ( )  --> h_A
 	init(h_A);
+/*
+printf("\nh_A: \n");
+for (int i = 0; i < POPSIZE * NVARS; ++i){
+	printf("(%d)%f",i%50,h_A[i]);
+}
+printf("\n");
+*/
 
     // Allocate device memory
     float *d_A,  *d_C;
 
-
-    // Allocate host matrix C
+	// Allocate host vector C
     unsigned int mem_size_C = dimsA.x * dimsA.y * sizeof(float);
     float *h_C = (float *) malloc(mem_size_C);
 
@@ -974,7 +980,13 @@ int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, flo
     // Setup execution parameters
     dim3 threads(dimsA.x, dimsA.y);
     dim3 grid(1, 1);
-
+/*	if (dimsA.x*dimsA.y > 512){
+		threads.x = 512;
+		threads.y = 512;
+		grid.x = ceil(double(dimsA.x)/double(threads.x));
+		grid.y = ceil(double(dimsA.y)/double(threads.y));
+	}
+*/
 
     cudaDeviceSynchronize();
 
@@ -1047,6 +1059,7 @@ int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, flo
 
 	//  Terminate simple GA
 	cout << "  \", \n";
+
 
 
     // Record the stop event
@@ -1141,13 +1154,12 @@ int main(int argc, char **argv)
         checkCmdLineFlag(argc, (const char **)argv, "?"))
     {
         printf("Usage -device=n (n >= 0 for deviceID)\n");
-        printf("      -width=Width's matrix -height=Height's matrix \n");
         printf("      -cvalue=contant value (constant value to initialize the matrix)\n");
         printf("      -a= (20 by default) -b= (0.2 by default) -c= (2*PI by default) \n");
 
         printf("      -max_gen= maximum number of generations (100 by default)\n");
-        printf("      -min= minimum invidual value ( -32.768 by default)\n");
-        printf("      -max= maximum invidual value ( 32.768 by default)\n");
+        printf("      -min= minimum individual value ( -32.768 by default)\n");
+        printf("      -max= maximum individual value ( 32.768 by default)\n");
         printf("      -p_mutation= probability of mutation (0.15 by default)\n");
         printf("      -population_size= population size (50 by default)\n");
         printf("      -p_crossover= probability of crossover (0.8 by default)\n");
@@ -1204,8 +1216,10 @@ int main(int argc, char **argv)
     }
 
 
+    // Matrix dimensions (width x height)
     dim3 dimsA(POPSIZE, NVARS, 1);
 
+/*
     // width of Matrix
     if (checkCmdLineFlag(argc, (const char **)argv, "width"))
     {
@@ -1217,7 +1231,7 @@ int main(int argc, char **argv)
     {
         dimsA.y = getCmdLineArgumentInt(argc, (const char **)argv, "height");
     }
-
+*/
     float valorA=20;
     if (checkCmdLineFlag(argc, (const char **)argv, "a"))
     {
@@ -1282,6 +1296,7 @@ int main(int argc, char **argv)
     	p_crossover = getCmdLineArgumentInt(argc, (const char **)argv, "p_crossover");
     }
 
+    // printf GA
 
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
     printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"number or generations\" : \"%d\",\n   \"minimal value\" : \"%f\",\n   \"maximum value\" : \"%f\",\n   \"p mutation\" : \"%f\",\n   \"p crossover\" : \"%f\",\n   \"population size\" : \"%d\",\n   \"n vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
