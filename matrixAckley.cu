@@ -713,8 +713,8 @@ void Xover ( int one, int two, int &seed )
 
 
 /**
+ *
  * Función Ackley usando CUDA
- * (pendiente de desarrollo, funcionalidad básica de sumatoria de elementos)
  *
  */
 
@@ -726,97 +726,25 @@ matrixAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB,
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
 
     float tmpSum = 0;
+    float tmpSum2 = 0;
+    float term1 =0, term2=0;
+
     // Funcionalidad simplicada a sumatoria, pendiente de desarrollar Ackley
-    if (ROW < wA && COL < hA) {
+    if (ROW < wA) {
         // each thread computes one element of the block sub-matrix
-        for (int i = 0; i < wA; i++) {
-            tmpSum += A[ROW * wA + i];// * B[i * dimsA.y + COL];
+        for (int i = 0; i < hA; i++) {
+            tmpSum += A[i * hA + COL] * A[i * hA + COL];
+            tmpSum2 += cos(valorC*A[i * hA + COL]);
         }
     }
-    C[ROW * wA + COL] = tmpSum;
 
-/*
-	const int BLOCK_SIZE=32;
+    term1= (0-valorA)*exp( (0-valorB)*sqrt(tmpSum/wA) );
+    term2= 0-exp(tmpSum2/wA);
 
-    // Block index
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
+    C[COL * hA + ROW] = term1 + term2 + valorA + exp(1.0);
 
-    // Thread index
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
+    //C[COL * hA + ROW] = tmpSum;
 
-    // Index of the first sub-matrix of A processed by the block
-    int aBegin = wA * BLOCK_SIZE * by;
-
-    // Index of the last sub-matrix of A processed by the block
-    int aEnd   = aBegin + wA - 1;
-
-    // Step size used to iterate through the sub-matrices of A
-    int aStep  = BLOCK_SIZE;
-
-
-    // Csub is used to store the element of the block sub-matrix
-    // that is computed by the thread
-    float Csub1 = 0;
-    float Csub2 = 0;
-
-    float term1 = 0;
-    float term2 = 0;
-
-    // Loop over all the sub-matrices of A and B
-    // required to compute the block sub-matrix
-    for (int a = aBegin;
-         a <= aEnd;
-         a += aStep)
-    {
-
-        // Declaration of the shared memory array As used to
-        // store the sub-matrix of A
-        __shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
-
-        // Declaration of the shared memory array Bs used to
-        // store the sub-matrix of B
-        //__shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
-
-        // Load the matrices from device memory
-        // to shared memory; each thread loads
-        // one element of each matrix
-        As[ty][tx] = A[a + wA * ty + tx];
-        //Bs[ty][tx] = B[b + wB * ty + tx];
-
-        // Synchronize to make sure the matrices are loaded
-        __syncthreads();
-
-        // Mulatoria the two matrices together;
-        // each thread computes one element
-        // of the block sub-matrix
-#pragma unroll
-
-        for (int k = 0; k < BLOCK_SIZE; ++k)
-        {
-            //Csub += As[ty][k] * Bs[k][tx];
-        	Csub1 += As[ty][k] * As[ty][k];
-            Csub2 += cos(valorC*As[ty][k]);
-        }
-
-        // Synchronize to make sure that the preceding
-        // computation is done before loading two new
-        // sub-matrices of A and B in the next iteration
-        __syncthreads();
-    }
-
-    // Write the block sub-matrix to device memory;
-    // each thread writes one element
-    //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    //C[c + wB * ty + tx] = Csub;
-    int c = wA * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-
-    term1= (0-valorA)*exp( (0-valorB)*sqrt(Csub1/wA) );
-    term2= 0-exp(Csub2/wA);
-
-    C[c + wA * ty + tx] =  term1 + term2 + valorA + exp(1.0);
-*/
 }
 
 
@@ -833,7 +761,7 @@ void constantInit(float *data, int size, float val)
 //****************************************************************************
 // Función init
 // 	Después de usar la función initialize()  para asignar valores a la población
-// 	con las restricciones necesrias, copiamos esos valores en la matriz que usará el problema
+// 	con las restricciones necesarias, copiamos esos valores en la matriz que usará el problema
 //****************************************************************************
 void init(float *data){
 
@@ -863,7 +791,7 @@ void resultToHost(float *data, int size){
     //printf("\n");
     for ( i = 0; i < NVARS; i++ ){
     	for ( member = 0; member < POPSIZE; member++ ){
-    		population[member].fitness = data[j];
+    		population[member].fitness = data[member*NVARS];
 			j++;
 			//printf("   %f",population[member].fitness);
       }
@@ -926,7 +854,7 @@ int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, flo
 
 	seed = 123456789;
 	initialize ( seed );
-	// initialize ( )  --> h_A
+	//
 	init(h_A);
 /*
 printf("\nh_A: \n");
@@ -1023,8 +951,19 @@ printf("\n");
 
     matrixAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
     cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
-    resultToHost(h_C, dimsA.x * dimsA.y);
+/*printf("\nh_C: \n");
+for (int i = 0; i <  dimsA.x*dimsA.y; ++i){
+	printf("(%d)%f",i,h_C[i]);
+}
+printf("\n");*/
+    resultToHost(h_C, dimsA.x * dimsA.y);////////////////////////////////////////////
 	//evaluate ( );
+/*printf("\nh_C despues: \n");
+for (int i = 0; i <  dimsA.x*dimsA.y; ++i){
+	printf("(%d)%f",i,h_C[i]);
+}
+printf("\n");*/
+
 
     keep_the_best ( );
 
@@ -1116,10 +1055,10 @@ printf("solo de la ULTIMA generacion \n");
     for (int i = 0; i < (int)(dimsA.x * dimsA.y); i++)
     {
 
-    	/*if(i%dimsA.y==0){
+    	if(i%dimsA.y==0){
     		printf("   \"fitness population %d\" : \"%.8f\", \n", i/dimsA.y, h_C[i]);
-    	}*/
-    	printf("   \"fitness population %d\" : \"%.8f\", \n", i, h_C[i]);
+    	}
+    	//printf("   \"fitness population %d\" : \"%.8f\", \n", i, h_C[i]);
 
     }
 
@@ -1219,19 +1158,7 @@ int main(int argc, char **argv)
     // Matrix dimensions (width x height)
     dim3 dimsA(POPSIZE, NVARS, 1);
 
-/*
-    // width of Matrix
-    if (checkCmdLineFlag(argc, (const char **)argv, "width"))
-    {
-        dimsA.x = getCmdLineArgumentInt(argc, (const char **)argv, "width");
-    }
 
-    // height of Matrix
-    if (checkCmdLineFlag(argc, (const char **)argv, "height"))
-    {
-        dimsA.y = getCmdLineArgumentInt(argc, (const char **)argv, "height");
-    }
-*/
     float valorA=20;
     if (checkCmdLineFlag(argc, (const char **)argv, "a"))
     {

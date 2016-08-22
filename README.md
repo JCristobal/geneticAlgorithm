@@ -6,13 +6,10 @@ Ejcutable [*matrixAckley*](https://github.com/JCristobal/matrizAckley/blob/maste
 
 * ? para desplegar información
 * -device= para elegir el disposivo donde computar
-* -width= ancho de la matriz (por defecto 32)
-* -height= largo de la matriz (por defecto 32)
 * -cvalue= valor constante de las filas (por defecto 1)
 * -a= valor para el parámetro *a* propio de la función Ackley (20 por defecto) 
 * -b= valor para el parámetro *b* propio de la función Ackley (0.2 por defecto) 
 * -c= valor para el parámetro *c* propio de la función Ackley (2*PI por defecto)
-
 * -max_gen= número de generaciones (100 por defecto)
 * -min= valor mínimo individual ( -32.768 por defecto)
 * -max= valor máximo individual ( 32.768 por defecto)
