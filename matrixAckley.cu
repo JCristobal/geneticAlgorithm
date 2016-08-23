@@ -719,7 +719,7 @@ void Xover ( int one, int two, int &seed )
  */
 
 __global__ void
-matrixAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB, float valorC)
+gaAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB, float valorC)
 {
 
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
@@ -729,7 +729,6 @@ matrixAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB,
     float tmpSum2 = 0;
     float term1 =0, term2=0;
 
-    // Funcionalidad simplicada a sumatoria, pendiente de desarrollar Ackley
     if (ROW < wA) {
         // each thread computes one element of the block sub-matrix
         for (int i = 0; i < hA; i++) {
@@ -743,7 +742,7 @@ matrixAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB,
 
     C[COL * hA + ROW] = term1 + term2 + valorA + exp(1.0);
 
-    //C[COL * hA + ROW] = tmpSum;
+//    C[COL * hA + ROW] = tmpSum;
 
 }
 
@@ -785,24 +784,19 @@ void init(float *data){
 // 	Después de evaluar la matriz correspondiente, almacenamos los resultados
 //****************************************************************************
 void resultToHost(float *data, int size){
-
     int member;
-    int i,j=0;
     //printf("\n");
-    for ( i = 0; i < NVARS; i++ ){
-    	for ( member = 0; member < POPSIZE; member++ ){
-    		population[member].fitness = data[member*NVARS];
-			j++;
-			//printf("   %f",population[member].fitness);
-      }
+    for ( member = 0; member < POPSIZE; member++ ){
+    	population[member].fitness = data[member*NVARS];
+    	//printf("   %f",population[member].fitness);
     }
 }
 
-
+//****************************************************************************
 /**
  * Run using CUDA
  */
-int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
+int gaAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
 {
 
 	//  Discussion:
@@ -845,24 +839,12 @@ int matrixAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, flo
 	int i;
 	int seed;
 
-	cout << "\n";
-	if ( NVARS < 2 ){
-	  cout << "\n";
-	  cout << "  The crossover modification will not be available,\n";
-	  cout << "  since it requires 2 <= NVARS.\n";
-	}
 
 	seed = 123456789;
 	initialize ( seed );
 	//
 	init(h_A);
-/*
-printf("\nh_A: \n");
-for (int i = 0; i < POPSIZE * NVARS; ++i){
-	printf("(%d)%f",i%50,h_A[i]);
-}
-printf("\n");
-*/
+
 
     // Allocate device memory
     float *d_A,  *d_C;
@@ -949,24 +931,12 @@ printf("\n");
 
 	//  Start simple GA
 
-    matrixAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+    gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
     cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
-/*printf("\nh_C: \n");
-for (int i = 0; i <  dimsA.x*dimsA.y; ++i){
-	printf("(%d)%f",i,h_C[i]);
-}
-printf("\n");*/
-    resultToHost(h_C, dimsA.x * dimsA.y);////////////////////////////////////////////
+    resultToHost(h_C, dimsA.x * dimsA.y);
 	//evaluate ( );
-/*printf("\nh_C despues: \n");
-for (int i = 0; i <  dimsA.x*dimsA.y; ++i){
-	printf("(%d)%f",i,h_C[i]);
-}
-printf("\n");*/
-
 
     keep_the_best ( );
-
 
 	for ( generation = 0; generation < MAXGENS; generation++ )
 	{
@@ -975,7 +945,7 @@ printf("\n");*/
 	  mutate ( seed );
 	  //report ( generation );
 
-	  matrixAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+	  gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
 	  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
 	  resultToHost(h_C, dimsA.x * dimsA.y);
 	  //evaluate ( );
@@ -983,22 +953,20 @@ printf("\n");*/
 	  elitist ( );
 	}
 
-	cout << " \"salida_en_bruto\" : \" \n";
+	printf(" \"resultado AG\" : {\n");
 
-	cout << " Best member after " << MAXGENS << " generations:\n";
-	cout << "\n";
+	printf("   \"generations\" : \"%d\", \n", MAXGENS);
 
 	for ( i = 0; i < NVARS; i++ )
 	{
-     cout << "  var(" << i << ") = " << population[POPSIZE].gene[i] << "\n";
+     printf("   \"var(%d)\" : \"%f\", \n", i, population[POPSIZE].gene[i]);
 	}
 
-	cout << "  Best fitness = " << population[POPSIZE].fitness << "\n";
-	cout << "\n";
+	printf("   \"Best fitness\" : \"%f\" \n", population[POPSIZE].fitness);
 
 	//  Terminate simple GA
-	cout << "  \", \n";
 
+	printf(" }, \n ");
 
 
     // Record the stop event
@@ -1033,7 +1001,7 @@ printf("\n");*/
     double flopsPermatrixSum = 2.0 * (double)dimsA.x * (double)dimsA.y * (double)dimsA.x;
     double gigaFlops = (flopsPermatrixSum * 1.0e-9f) / (msecPermatrixSum / 1000.0f);
     printf(
-        " \"datos_computo\" : { \n   \"performance\" : \"%.2f GFlop/s\", \n   \"time\" : \"%.3f msec\", \n   \"size\" : \"%.0f Ops\", \n   \"workgroupSize\" : \"%u threads/block\" \n }, \n",
+        " \"datos_computo\" : { \n   \"performance\" : \"%.2f GFlop/s\", \n   \"time\" : \"%.3f msec\", \n   \"size\" : \"%.0f Ops\", \n   \"workgroupSize\" : \"%u threads/block\" \n } \n",
         gigaFlops,
         msecTotal,
         flopsPermatrixSum,
@@ -1047,22 +1015,20 @@ printf("\n");*/
         printf("cudaMemcpy (h_C,d_C) returned error %s (code %d), line(%d)\n", cudaGetErrorString(error), error, __LINE__);
         exit(EXIT_FAILURE);
     }
-    printf(" \"num_resultados\" : \"%u\", \n",dimsA.y);
-printf("solo de la ULTIMA generacion \n");
-    printf(" \"resultados\" : { \n");
 
 
-    for (int i = 0; i < (int)(dimsA.x * dimsA.y); i++)
-    {
+/*
+    printf(" \"resultados (solo de la ULTIMA generacion)\" : { \n");
 
+
+    for (int i = 0; i < (int)(dimsA.x * dimsA.y); i++){
     	if(i%dimsA.y==0){
     		printf("   \"fitness population %d\" : \"%.8f\", \n", i/dimsA.y, h_C[i]);
     	}
-    	//printf("   \"fitness population %d\" : \"%.8f\", \n", i, h_C[i]);
-
     }
 
     printf("   \"x\": \"x\" \n }");
+*/
 
     // Clean up memory
     free(h_A);
@@ -1229,7 +1195,7 @@ int main(int argc, char **argv)
     printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"number or generations\" : \"%d\",\n   \"minimal value\" : \"%f\",\n   \"maximum value\" : \"%f\",\n   \"p mutation\" : \"%f\",\n   \"p crossover\" : \"%f\",\n   \"population size\" : \"%d\",\n   \"n vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 
 
-    int matrix_result = matrixAckley(argc, argv, dimsA, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
+    int matrix_result = gaAckley(argc, argv, dimsA, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
 
     printf("\n} \n}");
 
