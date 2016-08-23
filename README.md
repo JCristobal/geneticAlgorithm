@@ -2,7 +2,7 @@
 
 Algoritmo genético, optimizado con la unción Ackley, de forma paralela usando **CUDA 7.5**
 
-Ejcutable [*matrixAckley*](https://github.com/JCristobal/matrizAckley/blob/master/matrixAckley) con parámetros: 
+Ejcutable [*geneticAlgorithmAckley*](https://github.com/JCristobal/geneticAlgorithmAckley/blob/master/geneticAlgorithmAckley) con parámetros: 
 
 * ? para desplegar información
 * -device= para elegir el disposivo donde computar

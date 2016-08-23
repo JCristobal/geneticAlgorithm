@@ -216,7 +216,7 @@ endif
 # Target rules
 all: build
 
-build: matrixAckley
+build: geneticAlgorithmAckley
 
 check.deps:
 ifeq ($(SAMPLE_ENABLED),0)
@@ -225,19 +225,19 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-matrixAckley.o:matrixAckley.cu
+geneticAlgorithmAckley.o:geneticAlgorithmAckley.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-matrixAckley: matrixAckley.o
+geneticAlgorithmAckley: geneticAlgorithmAckley.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 	$(EXEC) mkdir -p ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 	$(EXEC) cp $@ ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 
 run: build
-	$(EXEC) ./matrixAckley
+	$(EXEC) ./geneticAlgorithmAckley
 
 clean:
-	rm -f matrixAckley matrixAckley.o
-	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/matrixAckley
+	rm -f geneticAlgorithmAckley geneticAlgorithmAckley.o
+	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/geneticAlgorithmAckley
 
 clobber: clean
