@@ -953,7 +953,7 @@ int gaAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float m
 	  elitist ( );
 	}
 
-	printf(" \"resultado AG\" : {\n");
+	printf(" \"resultado_AG\" : {\n");
 
 	printf("   \"generations\" : \"%d\", \n", MAXGENS);
 
@@ -962,7 +962,7 @@ int gaAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float m
      printf("   \"var(%d)\" : \"%f\", \n", i, population[POPSIZE].gene[i]);
 	}
 
-	printf("   \"Best fitness\" : \"%f\" \n", population[POPSIZE].fitness);
+	printf("   \"best_fitness\" : \"%f\" \n", population[POPSIZE].fitness);
 
 	//  Terminate simple GA
 
@@ -1192,12 +1192,12 @@ int main(int argc, char **argv)
     // printf GA
 
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
-    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"number or generations\" : \"%d\",\n   \"minimal value\" : \"%f\",\n   \"maximum value\" : \"%f\",\n   \"p mutation\" : \"%f\",\n   \"p crossover\" : \"%f\",\n   \"population size\" : \"%d\",\n   \"n vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 
 
     int matrix_result = gaAckley(argc, argv, dimsA, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
 
-    printf("\n} \n}");
+    printf("} \n}");
 
     exit(matrix_result);
 
