@@ -747,6 +747,32 @@ gaAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB, flo
 }
 
 
+/**
+ *
+ * Función Rastrigin usando CUDA
+ *
+ */
+__global__ void
+gaRastriginCUDA(float *C, float *A, int wA, int hA, float valorAR)
+{
+
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    float tmpSum = 0;
+
+    if (ROW < wA) {
+        // each thread computes one element of the block sub-matrix
+        for (int i = 0; i < hA; i++) {
+            tmpSum += (A[i * hA + COL]*A[i * hA + COL]) - (valorAR * cos(2 * M_PI * A[i * hA + COL]) );
+        }
+    }
+
+    C[COL * hA + ROW] = (valorAR * wA) + tmpSum;
+
+
+}
+
 //****************************************************************************
 // Función constantInit
 //****************************************************************************
@@ -796,7 +822,7 @@ void resultToHost(float *data, int size){
 /**
  * Run using CUDA
  */
-int gaAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
+int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float valorARastrigin, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
 {
 
 	//  Discussion:
@@ -928,30 +954,50 @@ int gaAckley(int argc, char **argv, dim3 &dimsA, int max_gen, float min, float m
         exit(EXIT_FAILURE);
     }
 
+	if(ag_rastrigin==1){
 
-	//  Start simple GA
+		gaRastriginCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorARastrigin);
+	    cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+	    resultToHost(h_C, dimsA.x * dimsA.y);
+		//evaluate ( );
+	    keep_the_best ( );
 
-    gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
-    cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
-    resultToHost(h_C, dimsA.x * dimsA.y);
-	//evaluate ( );
+		for ( generation = 0; generation < MAXGENS; generation++ ){
+		  selector ( seed );
+		  crossover ( seed );
+		  mutate ( seed );
+		  //report ( generation );
+		  gaRastriginCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorARastrigin);
+		  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+		  resultToHost(h_C, dimsA.x * dimsA.y);
+		  //evaluate ( );
+		  elitist ( );
+		}
 
-    keep_the_best ( );
-
-	for ( generation = 0; generation < MAXGENS; generation++ )
-	{
-	  selector ( seed );
-	  crossover ( seed );
-	  mutate ( seed );
-	  //report ( generation );
-
-	  gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
-	  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
-	  resultToHost(h_C, dimsA.x * dimsA.y);
-	  //evaluate ( );
-
-	  elitist ( );
 	}
+	else{
+
+	    gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+	    cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+	    resultToHost(h_C, dimsA.x * dimsA.y);
+		//evaluate ( );
+	    keep_the_best ( );
+
+		for ( generation = 0; generation < MAXGENS; generation++ ){
+		  selector ( seed );
+		  crossover ( seed );
+		  mutate ( seed );
+		  //report ( generation );
+		  gaAckleyCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorA, valorB, valorC);
+		  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
+		  resultToHost(h_C, dimsA.x * dimsA.y);
+		  //evaluate ( );
+		  elitist ( );
+		}
+
+
+	}
+
 
 	printf(" \"resultado_AG\" : {\n");
 
@@ -1060,23 +1106,52 @@ int main(int argc, char **argv)
     {
         printf("Usage -device=n (n >= 0 for deviceID)\n");
         printf("      -cvalue=contant value (constant value to initialize the matrix)\n");
-        printf("      -a= (20 by default) -b= (0.2 by default) -c= (2*PI by default) \n");
 
+        printf("Values to the genetic algorithm: \n");
         printf("      -max_gen= maximum number of generations (100 by default)\n");
-        printf("      -min= minimum individual value ( -32.768 by default)\n");
-        printf("      -max= maximum individual value ( 32.768 by default)\n");
+        printf("      -min= minimum individual value \n");
+        printf("      -max= maximum individual value \n");
         printf("      -p_mutation= probability of mutation (0.15 by default)\n");
         printf("      -population_size= population size (50 by default)\n");
         printf("      -p_crossover= probability of crossover (0.8 by default)\n");
         printf("      -n_vars= number of problem variables  (10 by default)\n");
 
+        printf("Values to Ackley optimization Test Function: \n");
+        printf("      -a= (20 by default) -b= (0.2 by default) -c= (2*PI by default) \n");
+        printf("       and min=-32.768 and max=32.768 by default \n");
+
+        printf("Values to Rastrigin optimization Test Function: \n");
+        printf("      -A_R= (10 by default) \n");
+        printf("       and min=-5.12 and max=5.12 by default \n");
+
+        printf("\nExecute Ackley by default, -rastrigin=1 to execute rastrigin function \n\n");
 
         exit(EXIT_SUCCESS);
     }
 
+
+	// Vemos que algoritmo vamos a aplicar (Ackley o Rastrigin)
+	int ag_rastrigin = 0;
+    if (checkCmdLineFlag(argc, (const char **)argv, "rastrigin"))
+    {
+    	ag_rastrigin = getCmdLineArgumentInt(argc, (const char **)argv, "rastrigin");
+
+    	if(ag_rastrigin > 1 or ag_rastrigin < 0){
+    		printf("Value to -rastrigin= should be 0 or 1 \n");
+    		exit(EXIT_SUCCESS);
+    	}
+    }
+
 	// Salida del programa en formato JSON
 	printf("{ \"calculo\":{ \n");
-    printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
+
+	if(ag_rastrigin==1){
+		printf(" \"nombre\" : \"Rastrigin function in genetic algorithm using CUDA\", \n");
+	}
+	else{
+		printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
+	}
+
 
     // valor de las filas de la matriz (1 por defecto)
     float valor=1.0;
@@ -1124,7 +1199,14 @@ int main(int argc, char **argv)
     // Matrix dimensions (width x height)
     dim3 dimsA(POPSIZE, NVARS, 1);
 
+    // Variables para el algoritmo rastrigin
+    float valorARastrigin=10;
+    if (checkCmdLineFlag(argc, (const char **)argv, "A_R"))
+    {
+    	valorARastrigin = getCmdLineArgumentInt(argc, (const char **)argv, "A_R");
+    }
 
+    // Variables para el algoritmo Ackley
     float valorA=20;
     if (checkCmdLineFlag(argc, (const char **)argv, "a"))
     {
@@ -1153,12 +1235,19 @@ int main(int argc, char **argv)
     }
 
     float min=-32.768;
+    float max=32.768;
+
+	if(ag_rastrigin==1){
+		min=-5.12;
+		max=5.12;
+	}
+
     if (checkCmdLineFlag(argc, (const char **)argv, "min"))
     {
     	min = getCmdLineArgumentInt(argc, (const char **)argv, "min");
     }
 
-    float max=32.768;
+
     if (checkCmdLineFlag(argc, (const char **)argv, "max"))
     {
     	max = getCmdLineArgumentInt(argc, (const char **)argv, "max");
@@ -1191,11 +1280,18 @@ int main(int argc, char **argv)
 
     // printf GA
 
+
+
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
-    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 
+	if(ag_rastrigin==1){
+	    printf(" \"info_input\" : { \n   \"A\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorARastrigin, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+	}
+	else{
+	    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+	}
 
-    int matrix_result = gaAckley(argc, argv, dimsA, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
+    int matrix_result = geneticAlgorithm(argc, argv, dimsA, ag_rastrigin, valorARastrigin, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
 
     printf("} \n}");
 
