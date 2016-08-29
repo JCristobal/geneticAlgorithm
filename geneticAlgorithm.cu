@@ -1003,12 +1003,15 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
 
 	printf("   \"generations\" : \"%d\", \n", MAXGENS);
 
-	for ( i = 0; i < NVARS; i++ )
-	{
-     printf("   \"var(%d)\" : \"%f\", \n", i, population[POPSIZE].gene[i]);
-	}
+	printf("   \"values\" : {\n", MAXGENS);
 
-	printf("   \"best_fitness\" : \"%f\" \n", population[POPSIZE].fitness);
+	for ( i = 0; i < NVARS-1; i++ )
+	{
+     printf("      \"%d\": \"%f\", \n", i, population[POPSIZE].gene[i]);
+	}
+	 printf("      \"%d\": \"%f\" \n", NVARS-1, population[POPSIZE].gene[NVARS-1]);
+	printf("   }, \n ");
+	printf("  \"best_fitness\" : \"%f\" \n", population[POPSIZE].fitness);
 
 	//  Terminate simple GA
 
