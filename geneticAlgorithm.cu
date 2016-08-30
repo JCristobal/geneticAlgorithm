@@ -1206,26 +1206,26 @@ int main(int argc, char **argv)
     float valorARastrigin=10;
     if (checkCmdLineFlag(argc, (const char **)argv, "A_R"))
     {
-    	valorARastrigin = getCmdLineArgumentInt(argc, (const char **)argv, "A_R");
+    	valorARastrigin = getCmdLineArgumentFloat(argc, (const char **)argv, "A_R");
     }
 
     // Variables para el algoritmo Ackley
     float valorA=20;
     if (checkCmdLineFlag(argc, (const char **)argv, "a"))
     {
-    	valorA = getCmdLineArgumentInt(argc, (const char **)argv, "a");
+    	valorA = getCmdLineArgumentFloat(argc, (const char **)argv, "a");
     }
 
     float valorB=0.2;
     if (checkCmdLineFlag(argc, (const char **)argv, "b"))
     {
-        valorB = getCmdLineArgumentInt(argc, (const char **)argv, "b");
+        valorB = getCmdLineArgumentFloat(argc, (const char **)argv, "b");
     }
 
     float valorC=2*M_PI;
     if (checkCmdLineFlag(argc, (const char **)argv, "c"))
     {
-        valorC = getCmdLineArgumentInt(argc, (const char **)argv, "c");
+        valorC = getCmdLineArgumentFloat(argc, (const char **)argv, "c");
     }
 
 
@@ -1247,13 +1247,14 @@ int main(int argc, char **argv)
 
     if (checkCmdLineFlag(argc, (const char **)argv, "min"))
     {
-    	min = getCmdLineArgumentInt(argc, (const char **)argv, "min");
+    	min = getCmdLineArgumentFloat(argc, (const char **)argv, "min");
     }
 
 
     if (checkCmdLineFlag(argc, (const char **)argv, "max"))
     {
-    	max = getCmdLineArgumentInt(argc, (const char **)argv, "max");
+    	max = getCmdLineArgumentFloat(argc, (const char **)argv, "max");
+
     }
 
     //    NVARS is the number of problem variables.
@@ -1266,7 +1267,7 @@ int main(int argc, char **argv)
     float p_mutation=0.15;
     if (checkCmdLineFlag(argc, (const char **)argv, "p_mutation"))
     {
-    	p_mutation = getCmdLineArgumentInt(argc, (const char **)argv, "p_mutation");
+    	p_mutation = getCmdLineArgumentFloat(argc, (const char **)argv, "p_mutation");
     }
 
     int population_size=50;
@@ -1278,7 +1279,7 @@ int main(int argc, char **argv)
     float p_crossover=0.8;
     if (checkCmdLineFlag(argc, (const char **)argv, "p_crossover"))
     {
-    	p_crossover = getCmdLineArgumentInt(argc, (const char **)argv, "p_crossover");
+    	p_crossover = getCmdLineArgumentFloat(argc, (const char **)argv, "p_crossover");
     }
 
     // printf GA
