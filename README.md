@@ -17,7 +17,7 @@ Ejcutable [*geneticAlgorithm*](https://github.com/JCristobal/geneticAlgorithm/bl
 * -a= valor para el parámetro *a* propio de la función Ackley (20 por defecto) 
 * -b= valor para el parámetro *b* propio de la función Ackley (0.2 por defecto) 
 * -c= valor para el parámetro *c* propio de la función Ackley (2*PI por defecto)
-* -A_R= valor para el parámetro *A* propio de la función Rastrigin
+* -A_R= valor para el parámetro *A* propio de la función Rastrigin (10 por defecto)
 
 
 Por defecto se evaluará con la función Ackley, para evaluar mediante Rastrigin añadimos el parámetro **-rastrigin=1**
