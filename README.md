@@ -1,4 +1,4 @@
-# matrizAckley
+# geneticAlgorithm
 
 Algoritmo genético, optimizado con la función Ackley y Rastrigin, de forma paralela usando **CUDA 7.5**
 
@@ -24,7 +24,7 @@ Por defecto se evaluará con la función Ackley, para evaluar mediante Rastrigin
 
 La salida se dará en formato JSON, dando información del cómputo, junto a los resultados según los parámetros dados.
 
-Dicho ejecutable se podra utilizar en un [servicio web](https://github.com/JCristobal/SWGPU) que ofrecerá una computación paralela usando **CUDA 7.5** en un servidor externo.
+Dicho ejecutable se podrá utilizar en un [servicio web](https://github.com/JCristobal/SWGPU) que ofrecerá una computación paralela usando **CUDA 7.5** en un servidor externo.
 
 
 

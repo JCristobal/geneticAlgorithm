@@ -34,8 +34,8 @@ float PMUTATION = 0.15; //    PMUTATION is the probability of mutation.
 
 
 //  Static parameters
-const int MAXVARS = 10000;
-const int MAXPOPSIZE = 1000;
+const int MAXVARS = 1000;
+const int MAXPOPSIZE = 10000;
 
 //
 //  Each GENOTYPE is a member of the population, with
@@ -834,15 +834,15 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
     }
 
     // Compute and print the performance
-    float msecPermatrixSum = msecTotal ;
-    double flopsPermatrixSum = 2.0 * (double)dimsA.x * (double)dimsA.y * (double)dimsA.x;
-    double gigaFlops = (flopsPermatrixSum * 1.0e-9f) / (msecPermatrixSum / 1000.0f);
+    float msec = msecTotal ;
+    double flops = (double)dimsA.x * (double)dimsA.y ;
+    double gigaFlops = (flops) / (msec / 1000.0f);
     printf(
-        " \"datos_computo\" : { \n   \"performance\" : \"%.2f GFlop/s\", \n   \"time\" : \"%.3f msec\", \n   \"size\" : \"%.0f Ops\", \n   \"workgroupSize\" : \"%u threads/block\" \n } \n",
+        " \"datos_computo\" : { \n   \"performance\" : \"%.2f Flop/s\", \n   \"time\" : \"%.3f msec\", \n   \"size\" : \"%.0f ps\", \n   \"workgroupSize\" : \"%u threads/block\" \n } \n",
         gigaFlops,
-        msecTotal,
-        flopsPermatrixSum,
-        threads.x * threads.y);
+        msec,
+        flops,
+        threads.x);
 
     // Copy result from device to host
     error = cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
