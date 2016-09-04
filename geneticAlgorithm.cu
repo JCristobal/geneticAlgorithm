@@ -616,7 +616,7 @@ void resultToHost(float *data, int size){
 /**
  * Run using CUDA
  */
-int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float valorARastrigin, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valor, float valorA, float valorB, float valorC)
+int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float valorARastrigin, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valorA, float valorB, float valorC)
 {
 
 	//  Discussion:
@@ -646,7 +646,7 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
     float *h_A = (float *)malloc(mem_size_A);
 
     // Initialize host memory
-    //constantInit(h_A, size_A, valor);
+    //constantInit(h_A, size_A, 1);
 
 	int generation;
 	int i;
@@ -791,7 +791,7 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
 
 	printf("   \"generations\" : \"%d\", \n", MAXGENS);
 
-	printf("   \"values\" : {\n", MAXGENS);
+	printf("   \"values\" : {\n");
 
 	for ( i = 0; i < NVARS-1; i++ )
 	{
@@ -896,7 +896,6 @@ int main(int argc, char **argv)
         checkCmdLineFlag(argc, (const char **)argv, "?"))
     {
         printf("Usage -device=n (n >= 0 for deviceID)\n");
-        printf("      -cvalue=contant value (constant value to initialize the matrix)\n");
 
         printf("Values to the genetic algorithm: \n");
         printf("      -max_gen= maximum number of generations (100 by default)\n");
@@ -928,34 +927,14 @@ int main(int argc, char **argv)
     	ag_rastrigin = getCmdLineArgumentInt(argc, (const char **)argv, "rastrigin");
 
     	if(ag_rastrigin > 1 or ag_rastrigin < 0){
-    		printf("Value to -rastrigin= should be 0 or 1 \n");
+    		printf("INPUT ERROR: Value to -rastrigin= should be 0 or 1 \n");
     		exit(EXIT_SUCCESS);
     	}
     }
 
-	// Salida del programa en formato JSON
-	printf("{ \"calculo\":{ \n");
-
-	if(ag_rastrigin==1){
-		printf(" \"nombre\" : \"Rastrigin function in genetic algorithm using CUDA\", \n");
-	}
-	else{
-		printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
-	}
-
-
-    // valor de las filas de la matriz (1 por defecto)
-    float valor=1.0;
-    if (checkCmdLineFlag(argc, (const char **)argv, "cvalue"))
-    {
-        valor = getCmdLineArgumentInt(argc, (const char **)argv, "cvalue");
-    }
-
     // By default, we use device 0, otherwise we override the device ID based on what is provided at the command line
     int devID = 0;
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "device"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "device")){
         devID = getCmdLineArgumentInt(argc, (const char **)argv, "device");
         cudaSetDevice(devID);
     }
@@ -981,10 +960,10 @@ int main(int argc, char **argv)
     {
         printf("cudaGetDeviceProperties returned error %s (code %d), line(%d)\n", cudaGetErrorString(error), error, __LINE__);
     }
-    else
+    /*else
     {
         printf(" \"dispositivo\" : \"GPU Device %d: '%s' with compute capability %d.%d\", \n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
-    }
+    }*/
 
 
     // Matrix dimensions (width x height)
@@ -1020,59 +999,83 @@ int main(int argc, char **argv)
     // Variables para el Algoritmo genético
 
     int max_gen=100;
-    if (checkCmdLineFlag(argc, (const char **)argv, "max_gen"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "max_gen")){
     	max_gen = getCmdLineArgumentInt(argc, (const char **)argv, "max_gen");
+    }
+    if(max_gen < 0){
+        printf("INPUT ERROR: Value to -max_gen= should be positive \n");
+        exit(EXIT_SUCCESS);
     }
 
     float min=-32.768;
     float max=32.768;
 
-	if(ag_rastrigin==1){
-		min=-5.12;
-		max=5.12;
-	}
+    if(ag_rastrigin==1){
+        min=-5.12;
+        max=5.12;
+    }
 
-    if (checkCmdLineFlag(argc, (const char **)argv, "min"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "min")){
     	min = getCmdLineArgumentFloat(argc, (const char **)argv, "min");
     }
 
 
-    if (checkCmdLineFlag(argc, (const char **)argv, "max"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "max")){
     	max = getCmdLineArgumentFloat(argc, (const char **)argv, "max");
 
+    }
+    if(max < min){
+        printf("INPUT ERROR: Maximum value should be greater than the minimum  \n");
+        exit(EXIT_SUCCESS);
     }
 
     //    NVARS is the number of problem variables.
     int n_vars=10;
-    if (checkCmdLineFlag(argc, (const char **)argv, "n_vars"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "n_vars")){
     	dimsA.y = n_vars = getCmdLineArgumentInt(argc, (const char **)argv, "n_vars");
     }
-
+    if(n_vars >= MAXVARS){
+        printf("INPUT ERROR: Value to -n_vars= should be less than %d \n", MAXVARS);
+        exit(EXIT_SUCCESS);
+    }
     float p_mutation=0.15;
-    if (checkCmdLineFlag(argc, (const char **)argv, "p_mutation"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "p_mutation")){
     	p_mutation = getCmdLineArgumentFloat(argc, (const char **)argv, "p_mutation");
+    }
+    if(p_mutation<0 or p_mutation>1){
+        printf("INPUT ERROR: Value to -p_mutation= should be between 0 and 1 \n");
+        exit(EXIT_SUCCESS);
     }
 
     int population_size=50;
-    if (checkCmdLineFlag(argc, (const char **)argv, "population_size"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "population_size")){
     	dimsA.x = population_size = getCmdLineArgumentInt(argc, (const char **)argv, "population_size");
+    }
+    if(population_size<0 or population_size>=MAXPOPSIZE){
+        printf("INPUT ERROR: Value to -p_crossover= should be less than %d \n", MAXPOPSIZE);
+        exit(EXIT_SUCCESS);
     }
 
     float p_crossover=0.8;
-    if (checkCmdLineFlag(argc, (const char **)argv, "p_crossover"))
-    {
+    if (checkCmdLineFlag(argc, (const char **)argv, "p_crossover")){
     	p_crossover = getCmdLineArgumentFloat(argc, (const char **)argv, "p_crossover");
     }
+    if(p_crossover<0 or p_crossover>1){
+        printf("INPUT ERROR: Value to -p_crossover= should be between 0 and 1 \n");
+        exit(EXIT_SUCCESS);
+    }
 
-    // printf GA
+	// Salida del programa en formato JSON
+	printf("{ \"calculo\":{ \n");
 
+	if(ag_rastrigin==1){
+		printf(" \"nombre\" : \"Rastrigin function in genetic algorithm using CUDA\", \n");
+	}
+	else{
+		printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
+	}
 
+    printf(" \"dispositivo\" : \"GPU Device %d: '%s' with compute capability %d.%d\", \n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
 
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
 
@@ -1083,7 +1086,7 @@ int main(int argc, char **argv)
 	    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 	}
 
-    int matrix_result = geneticAlgorithm(argc, argv, dimsA, ag_rastrigin, valorARastrigin, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valor, valorA, valorB, valorC);
+    int matrix_result = geneticAlgorithm(argc, argv, dimsA, ag_rastrigin, valorARastrigin, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valorA, valorB, valorC);
 
     printf("} \n}");
 

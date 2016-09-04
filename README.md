@@ -6,7 +6,6 @@ Ejcutable [*geneticAlgorithm*](https://github.com/JCristobal/geneticAlgorithm/bl
 
 * ? para desplegar información
 * -device= para elegir el disposivo donde computar
-* -cvalue= valor constante de las filas (por defecto 1)
 * -max_gen= número de generaciones (100 por defecto)
 * -min= valor mínimo individual ( -32.768 por defecto para Ackley y -5.12 en Rastrigin)
 * -max= valor máximo individual ( 32.768 por defecto para Ackley y 5.12 en Rastrigin)
