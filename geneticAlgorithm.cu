@@ -1069,13 +1069,17 @@ int main(int argc, char **argv)
 	printf("{ \"calculo\":{ \n");
 
 	if(ag_rastrigin==1){
-		printf(" \"nombre\" : \"Rastrigin function in genetic algorithm using CUDA\", \n");
+		//printf(" \"nombre\" : \"Rastrigin function in genetic algorithm using CUDA\", \n");
+		printf(" \"nombre\" : \"Algoritmo genético usando la función de Rastrigin mediante CUDA\", \n");
 	}
 	else{
-		printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
+		//printf(" \"nombre\" : \"Ackley function in genetic algorithm using CUDA\", \n");
+		printf(" \"nombre\" : \"Algoritmo genético usando la función de Ackley mediante CUDA\", \n");
 	}
 
-    printf(" \"dispositivo\" : \"GPU Device %d: '%s' with compute capability %d.%d\", \n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+    //printf(" \"dispositivo\" : \"GPU Device %d: '%s' with compute capability %d.%d\", \n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+    printf(" \"dispositivo\" : \"GPU Device %d: %s \", \n", devID, deviceProp.name);
+    printf(" \"capacidad_computo\" : \" %d.%d \", \n",  deviceProp.major, deviceProp.minor);
 
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
 
