@@ -746,7 +746,7 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
 		gaRastriginCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorARastrigin);
 	    cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
 	    resultToHost(h_C, dimsA.x * dimsA.y);
-		//evaluate ( );
+
 	    keep_the_best ( );
 
 		for ( generation = 0; generation < MAXGENS; generation++ ){
@@ -757,7 +757,7 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
 		  gaRastriginCUDA<<< grid, threads >>>(d_C, d_A, dimsA.x, dimsA.y, valorARastrigin);
 		  cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
 		  resultToHost(h_C, dimsA.x * dimsA.y);
-		  //evaluate ( );
+
 		  elitist ( );
 		}
 
@@ -1084,10 +1084,10 @@ int main(int argc, char **argv)
     printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
 
 	if(ag_rastrigin==1){
-	    printf(" \"info_input\" : { \n   \"A\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorARastrigin, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+	    printf(" \"info_input\" : { \n   \"A\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%.4f\",\n   \"maximum_value\" : \"%.4f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorARastrigin, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 	}
 	else{
-	    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%f\",\n   \"maximum_value\" : \"%f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
+	    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%.4f\",\n   \"maximum_value\" : \"%.4f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 	}
 
     int matrix_result = geneticAlgorithm(argc, argv, dimsA, ag_rastrigin, valorARastrigin, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valorA, valorB, valorC);
