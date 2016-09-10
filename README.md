@@ -2,7 +2,7 @@
 
 Algoritmo genético, optimizado con la función Ackley y Rastrigin, de forma paralela usando **CUDA 7.5**
 
-Ejcutable [*geneticAlgorithm*](https://github.com/JCristobal/geneticAlgorithm/blob/master/geneticAlgorithm) con parámetros: 
+Ejecutable [*geneticAlgorithm*](https://github.com/JCristobal/geneticAlgorithm/blob/master/geneticAlgorithm) con parámetros: 
 
 * ? para desplegar información
 * -device= para elegir el disposivo donde computar
