@@ -24,9 +24,9 @@
 using namespace std;
 
 // Parameters
-int POPSIZE = 50; 		//    POPSIZE is the population size.
-int MAXGENS = 100;  	//    MAXGENS is the maximum number of generations.
-int NVARS = 10;  		//    NVARS is the number of problem variables.
+int POPSIZE = 50;		//    POPSIZE is the population size.
+int MAXGENS = 100;		//    MAXGENS is the maximum number of generations.
+int NVARS = 10;			//    NVARS is the number of problem variables.
 float MIN = -32.768;	//	  MIN is the minimum value to genotype
 float MAX = 32.768;		//	  MAX is the maximum value to genotype
 float PXOVER = 0.8; 	//    PXOVER is the probability of crossover.
@@ -73,10 +73,9 @@ void init(float *data);
 
 
 /*
- * crossover: selects two parents for the single point crossover
+ * crossover: selects two parents for the single point crossover.
  *
- * FIRST is a count of the number of members chosen.
- * Input/output, int &SEED, a seed for the random number generator.
+ * @param SEED, a seed for the random number generator.
  *
  * */
 void crossover ( int &seed ){
@@ -85,7 +84,7 @@ void crossover ( int &seed ){
   const double b = 1.0;
   int mem;
   int one;
-  int first = 0;
+  int first = 0;	// FIRST is a count of the number of members chosen.
   double x;
 
   for ( mem = 0; mem < POPSIZE; ++mem )
@@ -111,16 +110,13 @@ void crossover ( int &seed ){
 }
 
 /*
- * elitist: stores the best member of the previous generation
+ * elitist: stores the best member of the previous generation.
  *
- * (The best member of the previous generation is stored as the last in the array)
- *
- * Local parameters: BEST (best fitness value) WORST (worst fitness value)
  */
 void elitist ( ){
 
   int i;
-  double best;
+  double best;	// The best member of the previous generation is stored as the last in the array
   int best_mem;
   double worst;
   int worst_mem;
@@ -163,6 +159,7 @@ void elitist ( ){
 //  copy the best from the new population; else replace the
 //  worst individual from the current population with the
 //  best one from the previous generation
+
   if ( population[POPSIZE].fitness > best ){
     for ( i = 0; i < NVARS; i++ ){
       population[POPSIZE].gene[i] = population[best_mem].gene[i];
@@ -181,13 +178,13 @@ void elitist ( ){
 
 
 /*
- * i4_uniform_ab: returns a scaled pseudorandom I4 between A and B
+ * i4_uniform_ab: returns a scaled pseudorandom I4 between A and B.
  *
- * (The pseudorandom number should be uniformly distributed between A and B)
+ * @param A lower limit of the interval.
+ * @param B upper limit of the interval.
+ * @param SEED, a seed for the random number generator.
+ * @return I4_UNIFORM (a number between A and B).
  *
- * Input: A, B, the limits of the interval
- *
- * Output: I4_UNIFORM (a number between A and B)
  */
 int i4_uniform_ab ( int a, int b, int &seed ){
 
@@ -195,7 +192,7 @@ int i4_uniform_ab ( int a, int b, int &seed ){
   const int i4_huge = 2147483647;
   int k;
   float r;
-  int value;
+  int value; 	// The pseudorandom number should be uniformly distributed between A and B
 
   if ( seed == 0 )
   {
@@ -243,10 +240,10 @@ int i4_uniform_ab ( int a, int b, int &seed ){
 
 
 /*
- * initialize: initializes the genes within the variables bounds
+ * initialize: initializes the genes within the variables bounds.
  *
- * Input: FILENAME, the name of the input file
- * Input/output: int &SEED, a seed for the random number generator
+ * @param SEED, a seed for the random number generator.
+ *
  */
 void initialize ( int &seed ){
 
@@ -272,16 +269,13 @@ void initialize ( int &seed ){
 
 
 /*
- * keep_the_best: keeps track of the best member of the population
+ * keep_the_best: keeps track of the best member of the population.
  *
- * (Note that the last entry in the array Population holds a copy of the best individual)
- *
- * Local parameters: CUR_BEST, the index of the best individual
  */
 void keep_the_best ( ){
 
-  int cur_best;
-  int mem;
+  int cur_best;	// the index of the best individual
+  int mem;	// The last entry in the array Population holds a copy of the best individual
   int i;
 
   cur_best = 0;
@@ -302,11 +296,10 @@ void keep_the_best ( ){
 }
 
 /*
- * mutate: performs a random uniform mutation
+ * mutate: performs a random uniform mutation.
  *
- * (A variable selected for mutation is replaced by a random value between the lower and upper bounds of this variable)
+ * @param SEED, a seed for the random number generator.
  *
- * Input/output, int &SEED, a seed for the random number generator
  */
 void mutate ( int &seed ){
 
@@ -321,8 +314,8 @@ void mutate ( int &seed ){
   for ( i = 0; i < POPSIZE; i++ ){
     for ( j = 0; j < NVARS; j++ ){
       x = r8_uniform_ab ( a, b, seed );
-      if ( x < PMUTATION )
-      {
+      if ( x < PMUTATION ){
+    	// The variable selected for mutation is replaced by a random value
         lbound = population[i].lower[j];
         ubound = population[i].upper[j];
         population[i].gene[j] = r8_uniform_ab ( lbound, ubound, seed );
@@ -337,17 +330,17 @@ void mutate ( int &seed ){
 /*
  * r8_uniform_ab: returns a scaled pseudorandom R8
  *
- * ( The pseudorandom number should be uniformly distributed between A and B)
+ * @param A lower limit of the interval.
+ * @param B upper limit of the interval.
+ * @param SEED, a seed for the random number generator.
+ * @return R8_UNIFORM_AB, a number strictly between A and B.
  *
- * Input: A, B, the limits of the interval
- * Input/output:&SEED, the "seed" value, which should NOT be 0. On output, SEED has been updated
- * Output: R8_UNIFORM_AB, a number strictly between A and B
  */
 double r8_uniform_ab ( double a, double b, int &seed ){
 
   int i4_huge = 2147483647;
   int k;
-  double value;
+  double value;		//  The pseudorandom number should be uniformly distributed between A and B
 
   if ( seed == 0 ){
     cerr << "\n";
@@ -372,23 +365,20 @@ double r8_uniform_ab ( double a, double b, int &seed ){
 }
 
 /*
- * report: reports progress of the simulation
+ * report: reports progress of the simulation.
  *
- * Local: avg, the average population fitness
- * Local: double square_sum, square of sum for std calc
- * Local: double stddev, standard deviation of population fitness
- * Local: double sum, the total population fitness
- * Local: double sum_square, sum of squares for std calc
+ * @param generation: index of generation to report.
+ *
  */
 void report ( int generation ){
 
-  double avg;
+  double avg;        // the average population fitness
   double best_val;
   int i;
-  double square_sum;
-  double stddev;
-  double sum;
-  double sum_square;
+  double square_sum; // square of sum for std calc
+  double stddev;     // standard deviation of population fitness
+  double sum;        // the total population fitness
+  double sum_square; // sum of squares for std calc
 
   if ( generation == 0 ){
     cout << "\n";
@@ -420,13 +410,14 @@ void report ( int generation ){
 
 
 /*
- * selector: is the selection function
+ * selector: is the selection function.
  *
- * (Standard proportional selection for maximization problems incorporating the elitist model.  This makes sure that the best member always survives)
+ * @param SEED, a seed for the random number generator.
  *
- *  Input/output: &SEED, a seed for the random number generator
  */
 void selector ( int &seed ){
+
+  // Standard proportional selection for maximization problems incorporating the elitist model.  This makes sure that the best member always survives
 
   const double a = 0.0;
   const double b = 1.0;
@@ -479,16 +470,17 @@ void selector ( int &seed ){
 
 
 /*
- * Xover: performs crossover of the two selected parents
+ * Xover: performs crossover of the two selected parents.
  *
- * Local: point, the crossover point
- * Input: ONE, TWO, the indices of the two parents
- * Input/output: &SEED, a seed for the random number generator
+ * @param one index of the first parent.
+ * @param two index of the second parent.
+ * @param SEED, a seed for the random number generator.
+ *
  */
 void Xover ( int one, int two, int &seed ){
 
   int i;
-  int point;
+  int point; // the crossover point
   double t;
 
   //  Select the crossover point.
@@ -507,7 +499,15 @@ void Xover ( int one, int two, int &seed ){
 
 
 /*
- * Función Ackley usando CUDA
+ * gaAckleyCUDA: Ackley function using CUDA
+ *
+ * @param C: pointer to the output vector
+ * @param A: pointer to the input vector
+ * @param wA: number of variables ("width")
+ * @param hA: population size ("height")
+ * @param valorA: variable A of Ackley function
+ * @param valorB: variable B of Ackley function
+ * @param valorC: variable C of Ackley function
  *
  */
 __global__ void
@@ -538,7 +538,13 @@ gaAckleyCUDA(float *C, float *A, int wA, int hA, float valorA, float valorB, flo
 
 
 /*
- * Función Rastrigin usando CUDA
+ * gaRastriginCUDA: Rastrigin function using CUDA
+ *
+ * @param C: pointer to the output vector
+ * @param A: pointer to the input vector
+ * @param wA: number of variables ("width")
+ * @param hA: population size ("height")
+ * @param valorAR: variable C of Rastrigin function
  *
  */
 __global__ void
@@ -564,7 +570,11 @@ gaRastriginCUDA(float *C, float *A, int wA, int hA, float valorAR)
 
 
 /*
- * constantInit
+ * constantInit: initialize a vector to a constant value.
+ *
+ * @param data input vector.
+ * @param size size of the vector.
+ * @param val value to initialize.
  */
 void constantInit(float *data, int size, float val)
 {
@@ -576,9 +586,9 @@ void constantInit(float *data, int size, float val)
 
 
 /*
- * init
+ * init: initialize the vector with the initialized values.
  *
- * Después de usar la función initialize()  para asignar valores a la población con las restricciones necesarias, copiamos esos valores en la matriz que usará el problema
+ * @param data input vector.
  */
 void init(float *data){
 
@@ -599,9 +609,11 @@ void init(float *data){
 
 
 /*
- * resultToHost
+ * resultToHost: store the results.
  *
- * Después de evaluar la matriz correspondiente, almacenamos los resultados
+ * @param data input vector.
+ * @param size input vector.
+ *
  */
 void resultToHost(float *data, int size){
     int member;
@@ -614,21 +626,28 @@ void resultToHost(float *data, int size){
 
 
 /**
- * Run using CUDA
+ * Run the genetic algorithm
+ *
+ * @param argc
+ * @param **argv
+ * @param dimsA width x height
+ * @param ag_rastrigin 1 to evaluate through Rastrigin, 0 through Ackley.
+ * @param valorARastrigin variable A of Rastrigin function.
+ * @param max_gen maximum number of generations.
+ * @param min minimum individual value.
+ * @param max maximum individual value.
+ * @param n_vars number of problem variables .
+ * @param p_mutation probability of mutation.
+ * @param population_size population_size.
+ * @param p_crossover probability of crossover.
+ * @param valorA variable A of Ackley function.
+ * @param valorB variable B of Ackley function.
+ * @param valorC variable C of Ackley function.
+ * @return
+ *
  */
-int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float valorARastrigin, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valorA, float valorB, float valorC)
-{
+int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float valorARastrigin, int max_gen, float min, float max, int n_vars, float p_mutation, int population_size, float p_crossover, float valorA, float valorB, float valorC){
 
-	//  Discussion:
-	//    Each generation involves selecting the best
-	//    members, performing crossover & mutation and then
-	//    evaluating the resulting population, until the terminating
-	//    condition is satisfied
-	//
-	//    This is a simple genetic algorithm implementation where the
-	//    evaluation function takes positive values only and the
-	//    fitness of an individual is the same as the value of the
-	//    objective function.
 
 	POPSIZE = population_size;
 	MAXGENS = max_gen;
@@ -637,7 +656,6 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
 	MAX = max;
 	PXOVER = p_crossover;
 	PMUTATION = p_mutation;
-
 
 
     // Allocate host memory for matrices A
@@ -703,13 +721,7 @@ int geneticAlgorithm(int argc, char **argv, dim3 &dimsA, int ag_rastrigin, float
     // Setup execution parameters
     dim3 threads(dimsA.x, dimsA.y);
     dim3 grid(1, 1);
-/*	if (dimsA.x*dimsA.y > 512){
-		threads.x = 512;
-		threads.y = 512;
-		grid.x = ceil(double(dimsA.x)/double(threads.x));
-		grid.y = ceil(double(dimsA.y)/double(threads.y));
-	}
-*/
+
 
     cudaDeviceSynchronize();
 
@@ -1081,7 +1093,7 @@ int main(int argc, char **argv)
     printf(" \"dispositivo\" : \"GPU Device %d: %s \", \n", devID, deviceProp.name);
     printf(" \"capacidad_computo\" : \" %d.%d \", \n",  deviceProp.major, deviceProp.minor);
 
-    printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
+    //printf(" \"info_matriz\" : \"Matrix(%d,%d) with random values\", \n", dimsA.x, dimsA.y);
 
 	if(ag_rastrigin==1){
 	    printf(" \"info_input\" : { \n   \"A\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%.4f\",\n   \"maximum_value\" : \"%.4f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorARastrigin, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
@@ -1090,7 +1102,9 @@ int main(int argc, char **argv)
 	    printf(" \"info_input\" : { \n   \"a\" : \"%f\", \n   \"b\" : \"%f\", \n   \"c\" : \"%f\", \n   \"n_generations\" : \"%d\",\n   \"minimal_value\" : \"%.4f\",\n   \"maximum_value\" : \"%.4f\",\n   \"p_mutation\" : \"%f\",\n   \"p_crossover\" : \"%f\",\n   \"population_size\" : \"%d\",\n   \"n_vars\" : \"%d\" \n }, \n", valorA, valorB, valorC, max_gen, min, max, p_mutation, p_crossover, population_size, n_vars);
 	}
 
+
     int matrix_result = geneticAlgorithm(argc, argv, dimsA, ag_rastrigin, valorARastrigin, max_gen, min, max, n_vars, p_mutation, population_size, p_crossover, valorA, valorB, valorC);
+
 
     printf("} \n}");
 
